@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>COO.OS — Frank</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f9f9f7;
+  --white: #ffffff;
+  --border: #e4e4e0;
+  --border2: #d0d0cc;
+  --text: #111111;
+  --muted: #777770;
+  --dim: #bbbbb5;
+
+  /* Status — strong, unambiguous */
+  --active:   #0a7c42;
+  --active-bg:#e8f5ee;
+  --stalled:  #b35c00;
+  --stalled-bg:#fff0e0;
+  --blocked:  #c0000a;
+  --blocked-bg:#ffeaea;
+  --parked:   #666660;
+  --parked-bg:#f0f0ee;
+
+  /* Category colors */
+  --ecomm:  #1a56db;
+  --ecomm-bg:#eff4ff;
+  --ai:     #7c3aed;
+  --ai-bg:  #f5f0ff;
+  --legal:  #be123c;
+  --legal-bg:#fff0f3;
+  --life:   #0369a1;
+  --life-bg:#f0f9ff;
+  --money:  #15803d;
+  --money-bg:#f0fdf4;
+  --faith:  #92400e;
+  --faith-bg:#fffbeb;
+
+  /* Priority */
+  --p1: #c0000a;
+  --p2: #b35c00;
+  --p3: #0a7c42;
+  --p4: #888880;
+
+  --accent: #1a56db;
+  --mono: 'Inter', sans-serif;
+  --serif: 'Playfair Display', serif;
+  --radius: 6px;
+  --shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--mono); font-size: 13px; line-height: 1.5; min-height: 100vh; }
+
+/* ── TOPBAR ── */
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 24px; background: var(--white); border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 200; box-shadow: var(--shadow);
+}
+.logo { font-family: var(--serif); font-size: 17px; color: var(--text); }
+.logo span { color: var(--accent); }
+.topbar-right { display: flex; align-items: center; gap: 10px; }
+.date-chip { font-size: 11px; color: var(--muted); }
+.btn { padding: 7px 14px; font-family: var(--mono); font-size: 11px; font-weight: 600; cursor: pointer; border-radius: var(--radius); border: none; transition: all 0.15s; letter-spacing: 0.02em; }
+.btn-primary { background: var(--text); color: #fff; }
+.btn-primary:hover { opacity: 0.8; }
+.btn-outline { background: transparent; border: 1px solid var(--border2); color: var(--muted); }
+.btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── STATS BAR ── */
+.statsbar { display: flex; background: var(--white); border-bottom: 1px solid var(--border); overflow-x: auto; }
+.stat { flex: 1; min-width: 80px; padding: 12px 16px; border-right: 1px solid var(--border); text-align: center; cursor: pointer; transition: background 0.12s; }
+.stat:last-child { border-right: none; }
+.stat:hover { background: var(--bg); }
+.stat.active-filter { background: var(--bg); border-bottom: 2px solid var(--accent); }
+.stat-num { font-family: var(--serif); font-weight: 700; font-size: 22px; line-height: 1; margin-bottom: 3px; }
+.stat-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; }
+.n-all { color: var(--text); }
+.n-active { color: var(--active); }
+.n-stalled { color: var(--stalled); }
+.n-blocked { color: var(--blocked); }
+.n-parked { color: var(--parked); }
+
+/* ── TODAY STRIP ── */
+.today-strip {
+  background: var(--white); border-bottom: 2px solid var(--border);
+  padding: 10px 24px;
+}
+.today-header {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;
+}
+.today-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); }
+.today-tasks { display: flex; flex-wrap: wrap; gap: 6px; }
+.today-task {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 4px; padding: 4px 10px; font-size: 11px; color: var(--text);
+  cursor: pointer; transition: all 0.12s; user-select: none;
+}
+.today-task:hover { border-color: var(--accent); }
+.today-task.done { opacity: 0.45; text-decoration: line-through; }
+.today-task .check { width: 13px; height: 13px; border: 1.5px solid var(--border2); border-radius: 3px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.today-task.done .check { background: var(--active); border-color: var(--active); color: #fff; font-size: 9px; }
+.add-task-inline { display: flex; gap: 6px; margin-top: 8px; }
+.add-task-input { flex: 1; border: 1px solid var(--border); border-radius: 4px; padding: 5px 10px; font-family: var(--mono); font-size: 11px; outline: none; background: var(--bg); }
+.add-task-input:focus { border-color: var(--accent); background: var(--white); }
+.add-task-btn { padding: 5px 12px; background: var(--accent); color: #fff; border: none; border-radius: 4px; font-size: 11px; font-weight: 600; cursor: pointer; }
+
+/* ── MAIN LAYOUT ── */
+.main { display: grid; grid-template-columns: 1fr 280px; min-height: calc(100vh - 160px); }
+.left-col { padding: 16px 20px; border-right: 1px solid var(--border); }
+.right-col { display: flex; flex-direction: column; background: var(--white); }
+
+/* ── FILTERS + SORT ── */
+.controls { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 8px; }
+.filters { display: flex; gap: 5px; flex-wrap: wrap; }
+.filter-btn { background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 4px 12px; font-family: var(--mono); font-size: 11px; font-weight: 500; cursor: pointer; border-radius: 20px; transition: all 0.12s; }
+.filter-btn:hover { border-color: var(--accent); color: var(--accent); }
+.filter-btn.on { background: var(--text); border-color: var(--text); color: #fff; }
+.sort-select { border: 1px solid var(--border); background: var(--white); color: var(--muted); font-family: var(--mono); font-size: 11px; padding: 4px 8px; border-radius: 4px; outline: none; cursor: pointer; }
+
+/* ── PROJECT CARDS ── */
+.project-grid { display: flex; flex-direction: column; gap: 6px; }
+.project-card {
+  background: var(--white); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 14px 16px; cursor: default; transition: box-shadow 0.15s, border-color 0.15s;
+  border-left: 4px solid transparent;
+}
+.project-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-color: var(--border2); }
+.project-card.hidden { display: none; }
+
+/* Left border by status */
+.project-card.s-active  { border-left-color: var(--active); }
+.project-card.s-stalled { border-left-color: var(--stalled); }
+.project-card.s-blocked { border-left-color: var(--blocked); }
+.project-card.s-parked  { border-left-color: var(--parked); }
+
+.card-top { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 6px; }
+.priority-badge {
+  font-size: 10px; font-weight: 700; width: 22px; height: 22px;
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-top: 1px;
+}
+.prio-1 { background: var(--blocked-bg); color: var(--blocked); }
+.prio-2 { background: var(--stalled-bg); color: var(--stalled); }
+.prio-3 { background: var(--active-bg); color: var(--active); }
+.prio-4 { background: var(--parked-bg); color: var(--parked); }
+
+.card-title { font-size: 13px; font-weight: 600; color: var(--text); flex: 1; line-height: 1.3; }
+.card-badges { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+
+.status-badge {
+  font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 3px;
+  text-transform: uppercase; letter-spacing: 0.05em;
+}
+.sb-active  { background: var(--active-bg);  color: var(--active); }
+.sb-stalled { background: var(--stalled-bg); color: var(--stalled); }
+.sb-blocked { background: var(--blocked-bg); color: var(--blocked); }
+.sb-parked  { background: var(--parked-bg);  color: var(--parked); }
+
+.cat-badge {
+  font-size: 10px; font-weight: 500; padding: 2px 8px; border-radius: 3px;
+}
+.cat-ecomm { background: var(--ecomm-bg); color: var(--ecomm); }
+.cat-ai    { background: var(--ai-bg);    color: var(--ai); }
+.cat-legal { background: var(--legal-bg); color: var(--legal); }
+.cat-life  { background: var(--life-bg);  color: var(--life); }
+.cat-money { background: var(--money-bg); color: var(--money); }
+.cat-faith { background: var(--faith-bg); color: var(--faith); }
+
+.card-desc { font-size: 11px; color: var(--muted); line-height: 1.4; margin-bottom: 8px; padding-left: 32px; }
+.card-bottom { display: flex; align-items: center; justify-content: space-between; padding-left: 32px; }
+.card-next { font-size: 11px; color: var(--text); }
+.card-next strong { color: var(--accent); }
+.open-btn { background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 3px 10px; font-size: 10px; font-weight: 500; cursor: pointer; border-radius: 3px; transition: all 0.12s; }
+.open-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── RIGHT COLUMN ── */
+.panel { padding: 16px 18px; border-bottom: 1px solid var(--border); }
+.panel:last-child { border-bottom: none; flex: 1; }
+.panel-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+.panel-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* NEXT ACTIONS */
+.action-item { display: flex; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--border); }
+.action-item:last-child { border-bottom: none; }
+.action-num { font-size: 10px; color: var(--accent); font-weight: 700; min-width: 16px; margin-top: 2px; }
+.action-text { font-size: 11px; color: var(--text); line-height: 1.4; }
+.action-tag { font-size: 10px; color: var(--muted); display: block; margin-top: 1px; }
+
+/* COO SAYS */
+.coo-quote { font-size: 12px; color: var(--text); line-height: 1.7; border-left: 2px solid var(--accent); padding-left: 10px; margin-bottom: 6px; font-style: italic; }
+.coo-attr { font-size: 10px; color: var(--accent); font-weight: 600; }
+
+/* NOTES */
+.notes-area { width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text); font-family: var(--mono); font-size: 11px; padding: 9px 10px; resize: none; height: 72px; outline: none; border-radius: 4px; transition: border-color 0.15s; line-height: 1.5; }
+.notes-area:focus { border-color: var(--accent); background: var(--white); }
+.notes-area::placeholder { color: var(--dim); }
+.save-note-btn { background: var(--bg); border: 1px solid var(--border2); color: var(--muted); padding: 6px; font-family: var(--mono); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; cursor: pointer; margin-top: 6px; width: 100%; border-radius: 4px; transition: all 0.12s; }
+.save-note-btn:hover { border-color: var(--active); color: var(--active); }
+.saved-notes { margin-top: 8px; display: flex; flex-direction: column; gap: 5px; max-height: 120px; overflow-y: auto; }
+.saved-note-item { background: var(--bg); border: 1px solid var(--border); padding: 7px 9px; font-size: 11px; color: var(--muted); line-height: 1.4; border-radius: 4px; }
+.note-ts { font-size: 9px; color: var(--dim); display: block; margin-top: 2px; }
+
+/* ── MODALS ── */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 999; align-items: center; justify-content: center; padding: 20px; }
+.modal-overlay.open { display: flex; }
+.modal { background: var(--white); border: 1px solid var(--border); border-radius: 8px; width: 100%; max-width: 520px; max-height: 85vh; overflow-y: auto; padding: 28px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); }
+.modal-title { font-family: var(--serif); font-weight: 700; font-size: 19px; margin-bottom: 20px; }
+.modal-title span { color: var(--accent); }
+.bs { margin-bottom: 16px; }
+.bs h4 { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; font-weight: 700; }
+.bs p, .bs li { font-size: 13px; color: var(--text); line-height: 1.6; }
+.bs ul { padding-left: 16px; }
+.bs li { margin-bottom: 4px; }
+.modal-close { background: var(--bg); border: 1px solid var(--border2); color: var(--muted); padding: 9px; font-family: var(--mono); font-size: 11px; font-weight: 600; cursor: pointer; margin-top: 10px; width: 100%; text-transform: uppercase; letter-spacing: 0.06em; border-radius: 4px; transition: all 0.12s; }
+.modal-close:hover { border-color: var(--blocked); color: var(--blocked); }
+
+.proj-modal { background: var(--white); border: 1px solid var(--border); border-radius: 8px; width: 100%; max-width: 460px; padding: 28px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); }
+.pm-title { font-family: var(--serif); font-weight: 700; font-size: 16px; margin-bottom: 4px; }
+.pm-status-row { display: flex; gap: 6px; align-items: center; margin-bottom: 18px; }
+.pm-sec { margin-bottom: 14px; }
+.pm-sec label { display: block; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; font-weight: 600; }
+.pm-sec p { font-size: 12px; color: var(--text); line-height: 1.5; }
+.pm-select { background: var(--bg); border: 1px solid var(--border2); color: var(--text); font-family: var(--mono); font-size: 12px; padding: 6px 9px; width: 100%; outline: none; border-radius: 4px; cursor: pointer; }
+.pm-select:focus { border-color: var(--accent); }
+
+@media (max-width: 800px) {
+  .main { grid-template-columns: 1fr; }
+  .right-col { border-top: 1px solid var(--border); }
+  .topbar { padding: 10px 16px; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo">COO<span>.</span>OS</div>
+  <div class="topbar-right">
+    <span class="date-chip" id="live-date"></span>
+    <button class="btn btn-outline" onclick="openBriefing()">Morning Briefing</button>
+    <button class="btn btn-primary" onclick="openAddProject()">+ Project</button>
+  </div>
+</div>
+
+<!-- STATS BAR -->
+<div class="statsbar">
+  <div class="stat" onclick="filterStat('all')" id="stat-all">
+    <div class="stat-num n-all" id="cnt-all">0</div><div class="stat-label">Total</div>
+  </div>
+  <div class="stat" onclick="filterStat('active')" id="stat-active">
+    <div class="stat-num n-active" id="cnt-active">0</div><div class="stat-label">Active</div>
+  </div>
+  <div class="stat" onclick="filterStat('stalled')" id="stat-stalled">
+    <div class="stat-num n-stalled" id="cnt-stalled">0</div><div class="stat-label">Stalled</div>
+  </div>
+  <div class="stat" onclick="filterStat('blocked')" id="stat-blocked">
+    <div class="stat-num n-blocked" id="cnt-blocked">0</div><div class="stat-label">Blocked</div>
+  </div>
+  <div class="stat" onclick="filterStat('parked')" id="stat-parked">
+    <div class="stat-num n-parked" id="cnt-parked">0</div><div class="stat-label">Parked</div>
+  </div>
+</div>
+
+<!-- TODAY STRIP -->
+<div class="today-strip">
+  <div class="today-header">
+    <span class="today-label">Today's Tasks &amp; Errands</span>
+    <button class="btn btn-outline" style="font-size:10px;padding:3px 10px" onclick="clearDoneTasks()">Clear Done</button>
+  </div>
+  <div class="today-tasks" id="today-tasks"></div>
+  <div class="add-task-inline">
+    <input class="add-task-input" id="task-input" placeholder="Add task or errand..." onkeydown="if(event.key==='Enter')addTask()">
+    <button class="add-task-btn" onclick="addTask()">Add</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="left-col">
+    <div class="controls">
+      <div class="filters">
+        <button class="filter-btn on" onclick="filterCat('all',this)">All</button>
+        <button class="filter-btn" onclick="filterCat('ecomm',this)">Ecomm</button>
+        <button class="filter-btn" onclick="filterCat('ai',this)">AI Builds</button>
+        <button class="filter-btn" onclick="filterCat('money',this)">Money</button>
+        <button class="filter-btn" onclick="filterCat('legal',this)">Legal</button>
+        <button class="filter-btn" onclick="filterCat('life',this)">Life</button>
+        <button class="filter-btn" onclick="filterCat('faith',this)">Faith</button>
+      </div>
+      <select class="sort-select" onchange="sortProjects(this.value)">
+        <option value="priority">Sort: Priority</option>
+        <option value="status">Sort: Status</option>
+        <option value="category">Sort: Category</option>
+      </select>
+    </div>
+    <div class="project-grid" id="project-grid"></div>
+  </div>
+
+  <div class="right-col">
+    <div class="panel">
+      <div class="panel-title">Next Actions</div>
+      <div class="action-item"><div class="action-num">01</div><div class="action-text">Run daily repricing + process MF returns<span class="action-tag">Ecomm · Do first</span></div></div>
+      <div class="action-item"><div class="action-num">02</div><div class="action-text">Call AMEX retention — card ending 7100 suspended<span class="action-tag">Money · Urgent</span></div></div>
+      <div class="action-item"><div class="action-num">03</div><div class="action-text">Chase Lowe's physical GC — get tracking number<span class="action-tag">Money · Last call</span></div></div>
+      <div class="action-item"><div class="action-num">04</div><div class="action-text">Process FBA returns — clear dining room<span class="action-tag">Ecomm · High ROI</span></div></div>
+      <div class="action-item"><div class="action-num">05</div><div class="action-text">Run Brickseek — 3 Lowes Summerlin<span class="action-tag">Ecomm · Today</span></div></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">COO Says</div>
+      <div id="coo-says"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Capture</div>
+      <textarea class="notes-area" id="note-input" placeholder="Drop anything here — idea, blocker, win...&#10;⌘+Enter to save"></textarea>
+      <button class="save-note-btn" onclick="saveNote()">Save Note</button>
+      <div class="saved-notes" id="saved-notes"></div>
+    </div>
+  </div>
+</div>
+
+<!-- BRIEFING MODAL -->
+<div class="modal-overlay" id="briefing-modal" onclick="if(event.target===this)closeBriefing()">
+  <div class="modal">
+    <div class="modal-title">Morning <span>Briefing</span></div>
+    <div class="bs"><h4>Today</h4><p id="b-date"></p></div>
+    <div class="bs"><h4>Portfolio Health</h4><p id="b-health"></p></div>
+    <div class="bs"><h4>🔴 Blocked — Clear These First</h4><ul id="b-blocked"></ul></div>
+    <div class="bs"><h4>🟠 Stalled — Need a Push</h4><ul id="b-stalled"></ul></div>
+    <div class="bs"><h4>🟢 Active — Keep Momentum</h4><ul id="b-active"></ul></div>
+    <div class="bs"><h4>COO Order of Battle</h4><p>1. Unblock blocked. 2. Unstall stalled. 3. Advance active. 4. Don't touch parked today.</p></div>
+    <button class="modal-close" onclick="closeBriefing()">Close</button>
+  </div>
+</div>
+
+<!-- PROJECT DETAIL MODAL -->
+<div class="modal-overlay" id="proj-modal" onclick="if(event.target===this)closeProjModal()">
+  <div class="proj-modal">
+    <div class="pm-title" id="pm-title"></div>
+    <div class="pm-status-row" id="pm-badges"></div>
+    <div class="pm-sec"><label>Description</label><p id="pm-desc"></p></div>
+    <div class="pm-sec"><label>Next Step</label><p id="pm-next"></p></div>
+    <div class="pm-sec"><label>Change Status</label>
+      <select class="pm-select" id="pm-status-select" onchange="updateProjStatus()">
+        <option value="active">Active</option>
+        <option value="stalled">Stalled</option>
+        <option value="blocked">Blocked</option>
+        <option value="parked">Parked</option>
+      </select>
+    </div>
+    <div class="pm-sec"><label>Priority (1=highest)</label>
+      <select class="pm-select" id="pm-prio-select" onchange="updateProjPrio()">
+        <option value="1">1 — Critical</option>
+        <option value="2">2 — High</option>
+        <option value="3">3 — Normal</option>
+        <option value="4">4 — Low / Parked</option>
+      </select>
+    </div>
+    <button class="modal-close" onclick="closeProjModal()">Close</button>
+  </div>
+</div>
+
+<!-- ADD PROJECT MODAL -->
+<div class="modal-overlay" id="add-modal" onclick="if(event.target===this)closeAddProject()">
+  <div class="proj-modal">
+    <div class="pm-title">Add Project</div>
+    <div style="margin-top:16px">
+      <div class="pm-sec"><label>Name</label><input id="np-name" class="pm-select" placeholder="Project name..."></div>
+      <div class="pm-sec"><label>Description</label><input id="np-desc" class="pm-select" placeholder="What is it?"></div>
+      <div class="pm-sec"><label>Next Step</label><input id="np-next" class="pm-select" placeholder="First action..."></div>
+      <div class="pm-sec"><label>Category</label>
+        <select id="np-cat" class="pm-select">
+          <option value="ecomm">Ecomm</option><option value="ai">AI Builds</option>
+          <option value="money">Money</option><option value="legal">Legal</option>
+          <option value="life">Life</option><option value="faith">Faith</option>
+        </select>
+      </div>
+      <div class="pm-sec"><label>Status</label>
+        <select id="np-status" class="pm-select">
+          <option value="active">Active</option><option value="stalled">Stalled</option>
+          <option value="blocked">Blocked</option><option value="parked">Parked</option>
+        </select>
+      </div>
+      <div class="pm-sec"><label>Priority</label>
+        <select id="np-prio" class="pm-select">
+          <option value="1">1 — Critical</option><option value="2">2 — High</option>
+          <option value="3">3 — Normal</option><option value="4">4 — Low</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="addProject()">Add Project</button>
+      <button class="modal-close" onclick="closeAddProject()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const PK = 'coo_projects_v3';
+const NK = 'coo_notes_v1';
+const TK = 'coo_tasks_v1';
+
+const defaultProjects = [
+  // ECOMM — Priority 1
+  { id:1,  name:"Daily Repricing",              cat:"ecomm", status:"active",  prio:1, desc:"Daily Amazon repricing to stay competitive and drive sales.",         next:"Run repricer now — check suppressed listings." },
+  { id:2,  name:"Process Returns / MF",         cat:"ecomm", status:"active",  prio:1, desc:"Process merchant-fulfilled and FBA returns. Clears dining room.",     next:"Set up AI returns processing system — CLEARS DINING ROOM." },
+  { id:3,  name:"Brickseek Local Buying",       cat:"ecomm", status:"active",  prio:1, desc:"Scan Lowes/stores for clearance Lego + other deals via Brickseek.",   next:"Run Brickseek — 3 Lowes Summerlin today." },
+  { id:4,  name:"OA Scanner",                   cat:"ai",    status:"active",  prio:1, desc:"Claude-built online arbitrage scraper for Amazon FBA deal discovery.", next:"Define scan criteria and first target categories." },
+  { id:5,  name:"Stock Page",                   cat:"ai",    status:"active",  prio:1, desc:"Inventory/stock visibility page — fix 1D chart to show current day only.", next:"Claude Code: fix 1D chart cutoff bug." },
+  { id:6,  name:"Amazon Returns Processor",     cat:"ai",    status:"active",  prio:1, desc:"AI system to evaluate, relist, or liquidate FBA returned inventory.",  next:"Build returns triage system with Claude." },
+  { id:7,  name:"Lego Deal Alerts",             cat:"ecomm", status:"active",  prio:2, desc:"Search all online Lego deals, text alerts for good local/online finds.", next:"Add Boscov + CCC price sources." },
+  { id:8,  name:"Brickseek Accelerator",        cat:"ai",    status:"stalled", prio:2, desc:"Accelerate Brickseek process — SOP, time savings, revenue boost.",    next:"Write SOP, identify biggest time sinks." },
+  { id:9,  name:"RA Bundles Finder",            cat:"ai",    status:"stalled", prio:2, desc:"Find bundle deals where single item loses but 4x bundle = 25% ROI.",  next:"Resume build — check last Claude session." },
+  { id:10, name:"Wholesale Distributor Sourcing",cat:"ecomm",status:"active",  prio:2, desc:"Source wholesale distributors — less restrictive than brands on Amazon.", next:"Run catalog arbitrage workflow on next supplier list." },
+  { id:11, name:"FBA Mixed Boxes",              cat:"ecomm", status:"active",  prio:2, desc:"FBA shipment — 3 mixed boxes or 1 medium? Decide and ship.",            next:"Decide box config and create shipment." },
+  { id:12, name:"eBay Listings",                cat:"ecomm", status:"active",  prio:2, desc:"List stamps, textbooks, Craftsman tools, large Illinois items on eBay.", next:"List Craftsman tools with photos first." },
+  { id:13, name:"ETSY POD Store",               cat:"ecomm", status:"stalled", prio:3, desc:"Open Etsy store — straighten out name, build dog blanket POD product.",  next:"Fix Etsy name, list first POD product." },
+  { id:14, name:"Ecomm 3X List — Video Games",  cat:"ecomm", status:"parked",  prio:3, desc:"Build $600/day profit list in Video Games category.",                   next:"Start list building Friday night." },
+  // MONEY
+  { id:15, name:"AMEX Card Resolution",         cat:"money", status:"blocked", prio:1, desc:"Cancel $895 AMEX card. LOC suspended because $895 unpaid. Acct ending 7100.", next:"Call AMEX retention again — last call." },
+  { id:16, name:"Lowe's GC Recovery",           cat:"money", status:"blocked", prio:1, desc:"Craftsman order reconciliation. Store has physical GC — get tracking #.", next:"Call store, demand tracking number. Bearer instrument." },
+  { id:17, name:"fin.xls P&L",                  cat:"money", status:"active",  prio:2, desc:"Monthly P&L and cash flow model. Feed into proper bookkeeping system.",  next:"Update May actuals, reconcile with bank." },
+  { id:18, name:"Bookkeeping System",            cat:"money", status:"stalled", prio:2, desc:"Set up QuickBooks or similar for monthly P&L. Find local ecomm accountant.", next:"Research ecomm-specific accountants in LV." },
+  { id:19, name:"Tax Filing 2023-2025",          cat:"money", status:"blocked", prio:1, desc:"3 years of taxes. Data pull into xls. Need Caleb's spreadsheet.",          next:"Dump 3 years AMZ sales into Caleb's spreadsheet." },
+  { id:20, name:"Stillman Bank Migration",       cat:"money", status:"parked",  prio:3, desc:"Move accounts to Stillman. Hold until after DDD (divorce decree date).",   next:"Park until divorce final." },
+  { id:21, name:"Borrowing Capacity Calc",       cat:"money", status:"active",  prio:3, desc:"Current debts calc done. Need remaining capacity calcs with rate/term.",    next:"Build capacity calc in fin.xls." },
+  { id:22, name:"TDA Trading Account",           cat:"money", status:"parked",  prio:4, desc:"Target $20k for RE. Avoid pattern day trader flag (4 round trips/5 days).", next:"Fund account after divorce settles." },
+  // LEGAL
+  { id:23, name:"Divorce Planning",              cat:"legal", status:"blocked", prio:1, desc:"Full divorce plan. Central doc folder, terms, custody, asset division, attorney.", next:"Create central file folder. Pull in all notes." },
+  { id:24, name:"Estate Planning / Trust",       cat:"legal", status:"blocked", prio:2, desc:"Set up trust for Francesca. Q: set up Stillman/Roth now or wait for divorce?", next:"Call LV estate attorney — reference Dedrick's contact." },
+  { id:25, name:"HOA Dispute",                   cat:"legal", status:"active",  prio:2, desc:"HOA violations — weeds letter + email responses. Vataca sent 5/1.",           next:"Buy flame thrower, burn weeds. Respond to HOA emails." },
+  { id:26, name:"Dad Liability Research",        cat:"legal", status:"parked",  prio:3, desc:"Research queueing liability situation for Dad.",                              next:"Research when time allows." },
+  { id:27, name:"GVCS Background Check",         cat:"legal", status:"stalled", prio:3, desc:"Fill in paperwork, drop off at Henderson police.",                            next:"Fill paperwork and drive to Henderson PD." },
+  // LIFE
+  { id:28, name:"Car — CV Joint + Tune-up",      cat:"life",  status:"blocked", prio:1, desc:"CV joint repair + tune-up. Sun Auto or Brake Masters? Check Nextdoor.",      next:"Check Nextdoor for Toyota Camry shop recs. Book it." },
+  { id:29, name:"Car AC",                        cat:"life",  status:"stalled", prio:2, desc:"AC not working. Needs diagnosis and repair.",                                 next:"Book AC diagnosis same time as CV joint." },
+  { id:30, name:"Sell Blue 2006 Camry",          cat:"life",  status:"parked",  prio:3, desc:"Sell the blue 2006 Camry.",                                                  next:"List on FB Marketplace + Craigslist." },
+  { id:31, name:"Plumber — 2 Sinks + Toilet",   cat:"life",  status:"blocked", prio:2, desc:"2 sinks, toilet, washing machine leak need plumber.",                         next:"Get 3 quotes from Nextdoor." },
+  { id:32, name:"Washing Machine Leak",          cat:"life",  status:"stalled", prio:2, desc:"Troubleshoot washing machine leak.",                                          next:"Troubleshoot before calling plumber." },
+  { id:33, name:"Operation See The Floor",       cat:"life",  status:"active",  prio:2, desc:"Clean dining room, 20 things put away, downstairs 2-day sprint.",             next:"Start with dining room — returns out first." },
+  { id:34, name:"Frankie — Europe Trip",         cat:"life",  status:"parked",  prio:3, desc:"Price 10-day Europe trip on AMEX points. Check Mandy + summer calendar.",    next:"Price on AMEX points after divorce clarity." },
+  { id:35, name:"Health — Cut Body Fat",         cat:"life",  status:"active",  prio:2, desc:"Structured diet + training. Macros tracker, scale, weekly weigh-in.",        next:"Buy BMI scale, set weekly weigh-in day." },
+  { id:36, name:"Medical Checkups",              cat:"life",  status:"stalled", prio:3, desc:"Dental, glasses, neuro exit plan, spine dr., disability/injury insurance.",   next:"Call dental first — need insurance card." },
+  { id:37, name:"Alabama RE — Huntsville/Mobile",cat:"money", status:"parked",  prio:3, desc:"Run numbers on LT hold SFR/quad Huntsville. Section 8 rates in Mobile.",    next:"Run 1282 Mobile deal in xls first." },
+  // AI BUILDS
+  { id:38, name:"YT Summarizer",                 cat:"ai",    status:"active",  prio:2, desc:"YouTube URL + transcript → type detection → AI process → actionable output.", next:"Set up testing process with AI type detection." },
+  { id:39, name:"Food Nutrient Tracker",         cat:"ai",    status:"active",  prio:3, desc:"Macros tracker app — voice input, food DB, timestamps, analytics.",           next:"Find free macro database API." },
+  { id:40, name:"BIG 7 App",                     cat:"ai",    status:"parked",  prio:4, desc:"Tony Robbins 7 aspects of life → gap analysis + planning tool.",              next:"Parked. Resume when other builds ship." },
+  { id:41, name:"LinkedIn Content Tool",         cat:"ai",    status:"parked",  prio:4, desc:"AI LinkedIn post drafting and farming tool.",                                 next:"Revisit when content strategy defined." },
+  { id:42, name:"YT Channel AIIRL",              cat:"ai",    status:"stalled", prio:3, desc:"AI in Real Life YouTube channel — need coach, content pipeline.",             next:"Define 3 first video concepts." },
+  // FAITH
+  { id:43, name:"Men's Prep — Effective Prayer", cat:"faith", status:"active",  prio:2, desc:"Teach prayer framework — Phil 4:6, persistent widow, petition outline.",     next:"Outline major teaching points for Monday night." },
+  { id:44, name:"Myles Munroe — 3 Keys Series",  cat:"faith", status:"parked",  prio:3, desc:"Pull transcripts, extract Scriptures and Keys, build interactive study.",    next:"Pull transcripts with AI tool." },
+];
+
+const QUOTES = [
+  { q:"The main thing is to keep the main thing the main thing.", a:"Gary Keller" },
+  { q:"Eliminate ruthlessly. What you don't do determines what you can do.", a:"Tim Ferriss" },
+  { q:"You don't rise to the level of your goals. You fall to the level of your systems.", a:"James Clear" },
+  { q:"Buy back your time before you scale anything else.", a:"Dan Martell" },
+  { q:"Move fast. Ship ugly. Fix in v2. Revenue cures everything.", a:"Alex Hormozi" },
+  { q:"Lack of direction, not lack of time, is the problem.", a:"Zig Ziglar" },
+  { q:"Your word is a lamp for my feet, a light on my path.", a:"Psalm 119:105" },
+  { q:"Do not be anxious about anything, but in every situation present your requests to God.", a:"Philippians 4:6" },
+  { q:"10x is easier than 2x. 2x thinking keeps you trapped in your current identity.", a:"Dr. Ben Hardy" },
+  { q:"The goal is not to be busy. The goal is to be free.", a:"Naval Ravikant" },
+  { q:"Discipline equals freedom.", a:"Jocko Willink" },
+];
+
+let projects = JSON.parse(localStorage.getItem(PK) || 'null') || defaultProjects;
+let notes    = JSON.parse(localStorage.getItem(NK) || '[]');
+let tasks    = JSON.parse(localStorage.getItem(TK) || 'null') || [
+  { id:1, text:"Run daily repricing", done:false },
+  { id:2, text:"Process MF returns", done:false },
+  { id:3, text:"Brickseek — 3 Lowes Summerlin", done:false },
+  { id:4, text:"Call AMEX retention (acct 7100)", done:false },
+  { id:5, text:"Chase Lowe's GC tracking #", done:false },
+];
+
+let curFilter = 'all';
+let curCat    = 'all';
+let curSort   = 'priority';
+let openId    = null;
+
+function save() {
+  localStorage.setItem(PK, JSON.stringify(projects));
+  localStorage.setItem(NK, JSON.stringify(notes));
+  localStorage.setItem(TK, JSON.stringify(tasks));
+}
+
+// ── TASKS ──
+function renderTasks() {
+  const el = document.getElementById('today-tasks');
+  el.innerHTML = '';
+  tasks.forEach(t => {
+    const div = document.createElement('div');
+    div.className = 'today-task' + (t.done ? ' done' : '');
+    div.onclick = () => { t.done = !t.done; save(); renderTasks(); };
+    div.innerHTML = `<div class="check">${t.done ? '✓' : ''}</div><span>${t.text}</span>`;
+    el.appendChild(div);
+  });
+}
+function addTask() {
+  const inp = document.getElementById('task-input');
+  const text = inp.value.trim();
+  if (!text) return;
+  tasks.push({ id: Date.now(), text, done: false });
+  save(); inp.value = ''; renderTasks();
+}
+function clearDoneTasks() {
+  tasks = tasks.filter(t => !t.done);
+  save(); renderTasks();
+}
+
+// ── PROJECTS ──
+function catClass(c)    { return 'cat-'+c; }
+function catLabel(c)    { return {ecomm:'Ecomm',ai:'AI Build',money:'Money',legal:'Legal',life:'Life',faith:'Faith'}[c]||c; }
+function statusBadge(s) { return `<span class="status-badge sb-${s}">${s}</span>`; }
+function catBadge(c)    { return `<span class="cat-badge cat-${c}">${catLabel(c)}</span>`; }
+function prioBadge(p)   { return `<span class="priority-badge prio-${p}">P${p}</span>`; }
+
+function getSorted() {
+  let arr = [...projects];
+  if (curSort === 'priority') arr.sort((a,b) => a.prio - b.prio || a.id - b.id);
+  if (curSort === 'status')   arr.sort((a,b) => ['blocked','stalled','active','parked'].indexOf(a.status) - ['blocked','stalled','active','parked'].indexOf(b.status));
+  if (curSort === 'category') arr.sort((a,b) => a.cat.localeCompare(b.cat));
+  return arr;
+}
+
+function renderGrid() {
+  const grid = document.getElementById('project-grid');
+  grid.innerHTML = '';
+  getSorted().forEach(p => {
+    const hidden = (curFilter !== 'all' && p.status !== curFilter) || (curCat !== 'all' && p.cat !== curCat);
+    const card = document.createElement('div');
+    card.className = `project-card s-${p.status}` + (hidden ? ' hidden' : '');
+    card.dataset.id = p.id;
+    card.innerHTML = `
+      <div class="card-top">
+        ${prioBadge(p.prio)}
+        <div class="card-title">${p.name}</div>
+        <div class="card-badges">${statusBadge(p.status)}${catBadge(p.cat)}</div>
+      </div>
+      <div class="card-desc">${p.desc}</div>
+      <div class="card-bottom">
+        <div class="card-next"><strong>→</strong> ${p.next}</div>
+        <button class="open-btn" onclick="openProject(${p.id})">Open</button>
+      </div>`;
+    grid.appendChild(card);
+  });
+  updateStats();
+}
+
+function updateStats() {
+  const c = {active:0,stalled:0,blocked:0,parked:0};
+  projects.forEach(p => c[p.status]++);
+  document.getElementById('cnt-all').textContent     = projects.length;
+  document.getElementById('cnt-active').textContent  = c.active;
+  document.getElementById('cnt-stalled').textContent = c.stalled;
+  document.getElementById('cnt-blocked').textContent = c.blocked;
+  document.getElementById('cnt-parked').textContent  = c.parked;
+}
+
+function filterStat(status) {
+  curFilter = status;
+  document.querySelectorAll('.stat').forEach(s => s.classList.remove('active-filter'));
+  document.getElementById('stat-'+status).classList.add('active-filter');
+  renderGrid();
+}
+
+function filterCat(cat, btn) {
+  curCat = cat;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  renderGrid();
+}
+
+function sortProjects(val) { curSort = val; renderGrid(); }
+
+// ── PROJECT MODAL ──
+function openProject(id) {
+  const p = projects.find(x => x.id === id);
+  if (!p) return;
+  openId = id;
+  document.getElementById('pm-title').textContent = p.name;
+  document.getElementById('pm-badges').innerHTML  = statusBadge(p.status) + catBadge(p.cat);
+  document.getElementById('pm-desc').textContent  = p.desc;
+  document.getElementById('pm-next').textContent  = p.next;
+  document.getElementById('pm-status-select').value = p.status;
+  document.getElementById('pm-prio-select').value   = p.prio;
+  document.getElementById('proj-modal').classList.add('open');
+}
+function updateProjStatus() {
+  const p = projects.find(x => x.id === openId);
+  if (p) { p.status = document.getElementById('pm-status-select').value; save(); renderGrid(); }
+}
+function updateProjPrio() {
+  const p = projects.find(x => x.id === openId);
+  if (p) { p.prio = +document.getElementById('pm-prio-select').value; save(); renderGrid(); }
+}
+function closeProjModal() { document.getElementById('proj-modal').classList.remove('open'); openId = null; }
+
+// ── ADD PROJECT ──
+function openAddProject()  { document.getElementById('add-modal').classList.add('open'); }
+function closeAddProject() { document.getElementById('add-modal').classList.remove('open'); }
+function addProject() {
+  const name = document.getElementById('np-name').value.trim();
+  if (!name) return;
+  projects.push({
+    id: Date.now(),
+    name,
+    desc:   document.getElementById('np-desc').value.trim() || 'No description.',
+    next:   document.getElementById('np-next').value.trim() || 'Define first action.',
+    cat:    document.getElementById('np-cat').value,
+    status: document.getElementById('np-status').value,
+    prio:   +document.getElementById('np-prio').value,
+  });
+  save(); renderGrid(); closeAddProject();
+  ['np-name','np-desc','np-next'].forEach(id => document.getElementById(id).value = '');
+}
+
+// ── BRIEFING ──
+function openBriefing() {
+  const c = {active:0,stalled:0,blocked:0,parked:0};
+  projects.forEach(p => c[p.status]++);
+  document.getElementById('b-date').textContent = new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  document.getElementById('b-health').textContent = `${projects.length} projects · ${c.active} active · ${c.stalled} stalled · ${c.blocked} blocked · ${c.parked} parked`;
+  ['blocked','stalled','active'].forEach(s => {
+    const el = document.getElementById('b-'+s);
+    const items = getSorted().filter(p => p.status === s).slice(0,8);
+    el.innerHTML = items.length ? items.map(p => `<li><strong>${p.name}</strong> — ${p.next}</li>`).join('') : '<li>None.</li>';
+  });
+  document.getElementById('briefing-modal').classList.add('open');
+}
+function closeBriefing() { document.getElementById('briefing-modal').classList.remove('open'); }
+
+// ── NOTES ──
+function saveNote() {
+  const inp = document.getElementById('note-input');
+  const text = inp.value.trim(); if (!text) return;
+  notes.push({ text, ts: new Date().toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) });
+  save(); inp.value = ''; renderNotes();
+}
+function renderNotes() {
+  const el = document.getElementById('saved-notes'); el.innerHTML = '';
+  [...notes].reverse().forEach(n => {
+    const div = document.createElement('div'); div.className = 'saved-note-item';
+    div.innerHTML = `${n.text}<span class="note-ts">${n.ts}</span>`;
+    el.appendChild(div);
+  });
+}
+
+// ── COO ──
+function renderCOO() {
+  const q = QUOTES[Math.floor(Math.random()*QUOTES.length)];
+  document.getElementById('coo-says').innerHTML = `<div class="coo-quote">"${q.q}"</div><div class="coo-attr">— ${q.a}</div>`;
+}
+
+// ── INIT ──
+document.getElementById('live-date').textContent = new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+document.getElementById('task-input').addEventListener('keydown', e => { if(e.key==='Enter') addTask(); });
+document.getElementById('note-input').addEventListener('keydown', e => { if(e.key==='Enter' && e.metaKey) saveNote(); });
+renderTasks(); renderGrid(); renderNotes(); renderCOO();
+document.getElementById('stat-all').classList.add('active-filter');
+</script>
+</body>
+</html>
